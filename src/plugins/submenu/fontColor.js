@@ -63,7 +63,7 @@ export default {
         contextPicker._styleProperty = 'color';
         contextPicker._colorList = contextFontColor.colorList;
         
-        this.plugins.colorPicker.init.call(this, this.getSelectionNode(), null);
+        this.plugins.colorPicker.init.call(this, this.selection.getNode(), null);
     },
 
      /**
@@ -85,7 +85,7 @@ export default {
     },
 
     remove: function () {
-        this.nodeChange(null, ['color'], ['span'], true);
+        this.applyStyleNode(null, ['color'], ['span'], true);
         this.submenuOff();
     },
 
@@ -94,7 +94,7 @@ export default {
 
         const newNode = this.util.createElement('SPAN');
         newNode.style.color = color;
-        this.nodeChange(newNode, ['color'], null, null);
+        this.applyStyleNode(newNode, ['color'], null, null);
 
         this.submenuOff();
     }

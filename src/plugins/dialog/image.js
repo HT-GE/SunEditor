@@ -258,7 +258,7 @@ export default {
 
     /**
      * @Override core, fileManager, resizing
-     * @description It is called from core.selectComponent.
+     * @description It is called from core.component.select
      * @param {Element} element Target element
      */
     select: function (element) {
@@ -270,7 +270,7 @@ export default {
      */
     destroy: function (element) {
         const imageEl = element || this.context.image._element;
-        const imageContainer = this.util.getParentElement(imageEl, this.util.isMediaComponent) || imageEl;
+        const imageContainer = this.util.getParentElement(imageEl, this.node.isComponent) || imageEl;
         const dataIndex = imageEl.getAttribute('data-index') * 1;
         let focusEl = (imageContainer.previousElementSibling || imageContainer.nextElementSibling);
         
@@ -285,7 +285,7 @@ export default {
         this.focusEdge(focusEl);
         
         // event
-        this.plugins.fileManager.deleteInfo.call(this, 'image', dataIndex, this.functions.onImageUpload);
+        this.plugins.fileManager.deleteInfo.call(this, 'image', dataIndex, this.events.onImageUpload);
 
         // history stack
         this.history.push(false);
@@ -410,8 +410,8 @@ export default {
             if ((fileSize + infoSize) > limitSize) {
                 this.closeLoading();
                 const err = '[SUNEDITOR.imageUpload.fail] Size of uploadable total images: ' + (limitSize/1000) + 'KB';
-                if (typeof this.functions.onImageUploadError !== 'function' || this.functions.onImageUploadError(err, { 'limitSize': limitSize, 'currentSize': infoSize, 'uploadSize': fileSize }, this)) {
-                    this.functions.noticeOpen(err);
+                if (typeof this.events.onImageUploadError !== 'function' || this.events.onImageUploadError.call(this.editor, err, { 'limitSize': limitSize, 'currentSize': infoSize, 'uploadSize': fileSize })) {
+                    this.notice.open(err);
                 }
                 return;
             }
@@ -430,8 +430,8 @@ export default {
             element: contextImage._element
         };
 
-        if (typeof this.functions.onImageUploadBefore === 'function') {
-            const result = this.functions.onImageUploadBefore(files, info, this, function (data) {
+        if (typeof this.events.onImageUploadBefore === 'function') {
+            const result = this.events.onImageUploadBefore.call(this.editor, files, info, function (data) {
                 if (data && this._w.Array.isArray(data.result)) {
                     this.plugins.image.register.call(this, info, data);
                 } else {
@@ -452,8 +452,8 @@ export default {
 
     error: function (message, response) {
         this.closeLoading();
-        if (typeof this.functions.onImageUploadError !== 'function' || this.functions.onImageUploadError(message, response, this)) {
-            this.functions.noticeOpen(message);
+        if (typeof this.events.onImageUploadError !== 'function' || this.events.onImageUploadError.call(this.editor, message, response)) {
+            this.notice.open(message);
             throw Error('[SUNEDITOR.plugin.image.error] response: ' + message);
         }
     },
@@ -477,15 +477,15 @@ export default {
             for (let i = 0; i < filesLen; i++) {
                 formData.append('file-' + i, files[i]);
             }
-            this.plugins.fileManager.upload.call(this, imageUploadUrl, this.options.imageUploadHeader, formData, this.plugins.image.callBack_imgUpload.bind(this, info), this.functions.onImageUploadError);
+            this.plugins.fileManager.upload.call(this, imageUploadUrl, this.options.imageUploadHeader, formData, this.plugins.image.callBack_imgUpload.bind(this, info), this.events.onImageUploadError);
         } else { // base64
             this.plugins.image.setup_reader.call(this, files, info.anchor, info.inputWidth, info.inputHeight, info.align, filesLen, info.isUpdate);
         }
     },
 
     callBack_imgUpload: function (info, xmlHttp) {
-        if (typeof this.functions.imageUploadHandler === 'function') {
-            this.functions.imageUploadHandler(xmlHttp, info, this);
+        if (typeof this.events.imageUploadHandler === 'function') {
+            this.events.imageUploadHandler.call(this.editor, xmlHttp, info);
         } else {
             const response = JSON.parse(xmlHttp.responseText);
             if (response.errorMessage) {
@@ -617,7 +617,7 @@ export default {
             contextImage.inputX.value = contextImage._origin_w;
             contextImage.inputY.value = contextImage._origin_h;
             // get align
-            const format = this.util.getFormatElement(tag);
+            const format = this.format.getLine(tag);
             if (format) contextImage._align = format.style.textAlign || format.style.float;
             // link
             const link = this.util.getParentElement(tag, this.util.isAnchor);
@@ -627,14 +627,14 @@ export default {
             imagePlugin.init.call(this);
         }.bind(this);
 
-        this.plugins.fileManager.checkInfo.call(this, 'image', ['img'], this.functions.onImageUpload, modifyHandler, true);
+        this.plugins.fileManager.checkInfo.call(this, 'image', ['img'], this.events.onImageUpload, modifyHandler, true);
     },
 
     /**
      * @Override fileManager
      */
     resetFileInfo: function () {
-        this.plugins.fileManager.resetInfo.call(this, 'image', this.functions.onImageUpload);
+        this.plugins.fileManager.resetInfo.call(this, 'image', this.events.onImageUpload);
     },
 
     create_image: function (src, anchor, width, height, align, file) {
@@ -673,7 +673,7 @@ export default {
         imagePlugin.setAlign.call(this, align, oImg, cover, container);
 
         oImg.onload = imagePlugin._image_create_onload.bind(this, oImg, contextImage.svgDefaultSize, container);
-        if (this.insertComponent(container, true, true, true)) this.plugins.fileManager.setInfo.call(this, 'image', oImg, this.functions.onImageUpload, file, true);
+        if (this.component.insert(container, true, true, true)) this.plugins.fileManager.setInfo.call(this, 'image', oImg, this.events.onImageUpload, file, true);
         this.context.resizing._resize_plugin = '';
     },
 
@@ -681,9 +681,9 @@ export default {
         // svg exception handling
         if (oImg.offsetWidth === 0) this.plugins.image.applySize.call(this, svgDefaultSize, '');
         if (this.options.mediaAutoSelect) {
-            this.selectComponent(oImg, 'image');
+            this.component.select(oImg, 'image');
         } else {
-            const line = this.appendFormatTag(container, null);
+            const line = this.format.appendLine(container, null);
             if (line) this.setRange(line, 0, line, 0);
         }
     },
@@ -762,7 +762,7 @@ export default {
         if (isNewContainer) {
             const existElement = (this.util.isRangeFormatElement(contextImage._element.parentNode) || this.util.isWysiwygDiv(contextImage._element.parentNode)) ? 
                 contextImage._element : 
-                /^A$/i.test(contextImage._element.parentNode.nodeName) ? contextImage._element.parentNode : this.util.getFormatElement(contextImage._element) || contextImage._element;
+                /^A$/i.test(contextImage._element.parentNode.nodeName) ? contextImage._element.parentNode : this.format.getLine(contextImage._element) || contextImage._element;
                 
             if (this.util.isFormatElement(existElement) && existElement.childNodes.length > 0) {
                 existElement.parentNode.insertBefore(container, existElement);
@@ -811,11 +811,11 @@ export default {
 
         // set imagesInfo
         if (init) {
-            this.plugins.fileManager.setInfo.call(this, 'image', imageEl, this.functions.onImageUpload, null, true);
+            this.plugins.fileManager.setInfo.call(this, 'image', imageEl, this.events.onImageUpload, null, true);
         }
 
         if (openController) {
-            this.selectComponent(imageEl, 'image');
+            this.component.select(imageEl, 'image');
         }
 
         // history stack
@@ -824,8 +824,8 @@ export default {
 
     update_src: function (src, element, file) {
         element.src = src;
-        this._w.setTimeout(this.plugins.fileManager.setInfo.bind(this, 'image', element, this.functions.onImageUpload, file, true));
-        this.selectComponent(element, 'image');
+        this._w.setTimeout(this.plugins.fileManager.setInfo.bind(this, 'image', element, this.events.onImageUpload, file, true));
+        this.component.select(element, 'image');
     },
 
     /**
@@ -838,8 +838,8 @@ export default {
         contextImage._linkElement = contextImage.anchorCtx.linkAnchor = /^A$/i.test(element.parentNode.nodeName) ? element.parentNode : null;
         contextImage._element = element;
         contextImage._cover = this.util.getParentElement(element, 'FIGURE');
-        contextImage._container = this.util.getParentElement(element, this.util.isMediaComponent);
-        contextImage._caption = this.util.getChildElement(contextImage._cover, 'FIGCAPTION');
+        contextImage._container = this.util.getParentElement(element, this.node.isComponent);
+        contextImage._caption = this.util.getEdgeChild(contextImage._cover, 'FIGCAPTION');
         contextImage._align = element.style.float || element.getAttribute('data-align') || 'none';
         element.style.float = '';
         this.plugins.anchor.setCtx(contextImage._linkElement, contextImage.anchorCtx);

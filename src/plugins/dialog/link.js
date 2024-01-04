@@ -120,7 +120,7 @@ export default {
             const oA = this.plugins.anchor.createAnchor.call(this, this.context.anchor.caller.link, false);
     
             if (!this.context.dialog.updateModal) {
-                const selectedFormats = this.getSelectedElements();
+                const selectedFormats = this.selection.getLines();
                 if (selectedFormats.length > 1) {
                     const oFormat = this.util.createElement(selectedFormats[0].nodeName);
                     oFormat.appendChild(oA);
@@ -195,10 +195,10 @@ export default {
         if (/update/.test(command)) {
             this.plugins.dialog.open.call(this, 'link', true);
         } else if (/unlink/.test(command)) {
-            const sc = this.util.getChildElement(this.context.link._linkAnchor, function (current) { return current.childNodes.length === 0 || current.nodeType === 3; }, false);
-            const ec = this.util.getChildElement(this.context.link._linkAnchor, function (current) { return current.childNodes.length === 0 || current.nodeType === 3; }, true);
+            const sc = this.util.getEdgeChild(this.context.link._linkAnchor, function (current) { return current.childNodes.length === 0 || current.nodeType === 3; }, false);
+            const ec = this.util.getEdgeChild(this.context.link._linkAnchor, function (current) { return current.childNodes.length === 0 || current.nodeType === 3; }, true);
             this.setRange(sc, 0, ec, ec.textContent.length);
-            this.nodeChange(null, null, ['A'], false);
+            this.applyStyleNode(null, null, ['A'], false);
         } else {
             /** delete */
             this.util.removeItem(this.context.link._linkAnchor);

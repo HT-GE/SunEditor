@@ -202,7 +202,7 @@ export default {
         tableHTML += '</tbody>';
         oTable.innerHTML = tableHTML;
 
-        const changed = this.insertComponent(oTable, false, true, false);
+        const changed = this.component.insert(oTable, false, true, false);
         
         if (changed) {
             const firstTd = oTable.querySelector('td div');
@@ -314,7 +314,7 @@ export default {
         const tablePlugin = this.plugins.table;
         const contextTable = this.context.table;
 
-        if (!this.getSelection().isCollapsed && !tablePlugin._selectedCell) {
+        if (!this.selection.get().isCollapsed && !tablePlugin._selectedCell) {
             this.controllersOff();
             this.util.removeClass(tdElement, 'se-table-selected-cell');
             return;
@@ -790,11 +790,11 @@ export default {
         this.plugins.table._closeSplitMenu = function () {
             this.util.removeClass(this.context.table.splitButton, 'on');
             this.context.table.splitMenu.style.display = 'none';
-            this.removeDocEvent('click', this.plugins.table._closeSplitMenu);
+            this.eventManager.removeGlobalEvent('click', this.plugins.table._closeSplitMenu);
             this.plugins.table._closeSplitMenu = null;
         }.bind(this);
 
-        this.addDocEvent('click', this.plugins.table._closeSplitMenu);
+        this.eventManager.addGlobalEvent('click', this.plugins.table._closeSplitMenu);
     },
 
     splitCells: function (direction) {
@@ -1175,7 +1175,7 @@ export default {
     _onCellMultiSelect: function (e) {
         this._antiBlur = true;
         const tablePlugin = this.plugins.table;
-        const target = this.util.getParentElement(e.target, this.util.isCell);
+        const target = this.util.getParentElement(e.target, this.util.isTableCell);
 
         if (tablePlugin._shift) {
             if (target === tablePlugin._fixedCell) tablePlugin._toggleEditor.call(this, true);

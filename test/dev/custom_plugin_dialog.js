@@ -173,7 +173,7 @@ export default {
                 oA.textContent = anchorText;
                 oA.target = contextLink.targetSelect.selectedOptions[0].value;
 
-                const selectedFormats = this.getSelectedElements();
+                const selectedFormats = this.selection.getLines();
                 if (selectedFormats.length > 1) {
                     const oFormat = this.util.createElement(selectedFormats[0].nodeName);
                     oFormat.appendChild(oA);
@@ -234,7 +234,7 @@ export default {
     on: function (update) {
         if (!update) {
             this.plugins.customLink.init.call(this);
-            this.context.customLink.linkAnchorText.value = this.getSelection().toString();
+            this.context.customLink.linkAnchorText.value = this.selection.get().toString();
         } else if (this.context.customLink._linkAnchor) {
             this.context.dialog.updateModal = true;
             this.context.customLink.focusElement.value = this.context.customLink._linkAnchor.href;
@@ -286,10 +286,10 @@ export default {
             this.plugins.dialog.open.call(this, 'customLink', true);
         }
         else if (/unlink/.test(command)) {
-            const sc = this.util.getChildElement(this.context.customLink._linkAnchor, function (current) { return current.childNodes.length === 0 || current.nodeType === 3; }, false);
-            const ec = this.util.getChildElement(this.context.customLink._linkAnchor, function (current) { return current.childNodes.length === 0 || current.nodeType === 3; }, true);
+            const sc = this.util.getEdgeChild(this.context.customLink._linkAnchor, function (current) { return current.childNodes.length === 0 || current.nodeType === 3; }, false);
+            const ec = this.util.getEdgeChild(this.context.customLink._linkAnchor, function (current) { return current.childNodes.length === 0 || current.nodeType === 3; }, true);
             this.setRange(sc, 0, ec, ec.textContent.length);
-            this.nodeChange(null, null, ['A'], false);
+            this.applyStyleNode(null, null, ['A'], false);
         }
         else {
             /** delete */

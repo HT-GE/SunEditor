@@ -417,7 +417,7 @@
             align = align === 'none' ? 'basic' : align;
     
             // text
-            const container = this.util.getParentElement(targetElement, this.util.isComponent);
+            const container = this.util.getParentElement(targetElement, this.node.isComponent);
             const cover = this.util.getParentElement(targetElement, 'FIGURE');
             const displayX = this.plugins.resizing._module_getSizeX.call(this, contextPlugin, targetElement, cover, container) || 'auto';
             const displayY = contextPlugin._onlyPercentage && plugin === 'image' ? '' : ', ' + (this.plugins.resizing._module_getSizeY.call(this, contextPlugin, targetElement, cover, container) || 'auto');
@@ -460,7 +460,7 @@
                 contextResizing.captionButton.style.display = 'none';
             } else {
                 contextResizing.captionButton.style.display = '';
-                if (this.util.getChildElement(targetElement.parentNode, 'figcaption')) {
+                if (this.util.getEdgeChild(targetElement.parentNode, 'figcaption')) {
                     this.util.addClass(contextResizing.captionButton, 'active');
                     contextPlugin._captionChecked = true;
                 } else {
@@ -478,8 +478,8 @@
             }
 
             this.setControllerPosition(contextResizing.resizeButton, resizeContainer, 'bottom', addOffset);
-            this.controllersOn(resizeContainer, contextResizing.resizeButton, this.util.setDisabledButtons.bind(this, false, this.resizingDisabledButtons), targetElement, plugin);
-            this.util.setDisabledButtons(true, this.resizingDisabledButtons);
+            this.controllersOn(resizeContainer, contextResizing.resizeButton, this.util.setDisabled.bind(null, false, this.resizingDisabledButtons), targetElement, plugin);
+            this.util.setDisabled(true, this.resizingDisabledButtons);
     
             contextResizing._resize_w = w;
             contextResizing._resize_h = h;
@@ -511,11 +511,11 @@
             this.plugins.resizing._closeAlignMenu = function () {
                 this.util.removeClass(this.context.resizing.alignButton, 'on');
                 this.context.resizing.alignMenu.style.display = 'none';
-                this.removeDocEvent('click', this.plugins.resizing._closeAlignMenu);
+                this.eventManager.removeGlobalEvent('click', this.plugins.resizing._closeAlignMenu);
                 this.plugins.resizing._closeAlignMenu = null;
             }.bind(this);
     
-            this.addDocEvent('click', this.plugins.resizing._closeAlignMenu);
+            this.eventManager.addGlobalEvent('click', this.plugins.resizing._closeAlignMenu);
         },
     
         /**
@@ -549,7 +549,7 @@
                 case 'auto':
                     this.plugins.resizing.resetTransform.call(this, contextEl);
                     currentModule.setAutoSize.call(this);
-                    this.selectComponent(contextEl, pluginName);
+                    this.component.select(contextEl, pluginName);
                     break;
                 case 'percent':
                     let percentY = this.plugins.resizing._module_getSizeY.call(this, currentContext);
@@ -560,7 +560,7 @@
     
                     this.plugins.resizing.resetTransform.call(this, contextEl);
                     currentModule.setPercentSize.call(this, (value * 100), (this.util.getNumber(percentY, 0) === null || !/%$/.test(percentY)) ? '' : percentY);
-                    this.selectComponent(contextEl, pluginName);
+                    this.component.select(contextEl, pluginName);
                     break;
                 case 'mirror':
                     const r = contextEl.getAttribute('data-rotate') || '0';
@@ -587,7 +587,7 @@
                     contextResizing._rotateVertical = /^(90|270)$/.test(this._w.Math.abs(deg).toString());
                     this.plugins.resizing.setTransformSize.call(this, contextEl, null, null);
         
-                    this.selectComponent(contextEl, pluginName);
+                    this.component.select(contextEl, pluginName);
                     break;
                 case 'onalign':
                     this.plugins.resizing.openAlignMenu.call(this);
@@ -595,7 +595,7 @@
                 case 'align':
                     const alignValue = value === 'basic' ? 'none' : value;
                     currentModule.setAlign.call(this, alignValue, null, null, null);
-                    this.selectComponent(contextEl, pluginName);
+                    this.component.select(contextEl, pluginName);
                     break;
                 case 'caption':
                     const caption = !currentContext._captionChecked;
@@ -605,7 +605,7 @@
                     currentModule.update_image.call(this, false, false, false);
     
                     if (caption) {
-                        const captionText = this.util.getChildElement(currentContext._caption, function (current) {
+                        const captionText = this.util.getEdgeChild(currentContext._caption, function (current) {
                             return current.nodeType === 3;
                         });
     
@@ -617,14 +617,14 @@
     
                         this.controllersOff();
                     } else {
-                        this.selectComponent(contextEl, pluginName);
+                        this.component.select(contextEl, pluginName);
                         currentModule.openModify.call(this, true);
                     }
     
                     break;
                 case 'revert':
                     currentModule.setOriginSize.call(this);
-                    this.selectComponent(contextEl, pluginName);
+                    this.component.select(contextEl, pluginName);
                     break;
                 case 'update':
                     currentModule.openModify.call(this);
@@ -745,7 +745,7 @@
          * @param {Element} element Target element (not caption element)
          */
         setCaptionPosition: function (element) {
-            const figcaption = this.util.getChildElement(this.util.getParentElement(element, 'FIGURE'), 'FIGCAPTION');
+            const figcaption = this.util.getEdgeChild(this.util.getParentElement(element, 'FIGURE'), 'FIGCAPTION');
             if (figcaption) {
                 figcaption.style.marginTop = (this.context.resizing._rotateVertical ? element.offsetWidth - element.offsetHeight : 0) + 'px';
             }
@@ -774,9 +774,9 @@
                 const change = contextResizing._isChange;
                 contextResizing._isChange = false;
     
-                this.removeDocEvent('mousemove', resizing_element_bind);
-                this.removeDocEvent('mouseup', closureFunc_bind);
-                this.removeDocEvent('keydown', closureFunc_bind);
+                this.eventManager.removeGlobalEvent('mousemove', resizing_element_bind);
+                this.eventManager.removeGlobalEvent('mouseup', closureFunc_bind);
+                this.eventManager.removeGlobalEvent('keydown', closureFunc_bind);
                 
                 if (e.type === 'keydown') {
                     this.controllersOff();
@@ -791,9 +791,9 @@
             }.bind(this);
     
             const resizing_element_bind = this.plugins.resizing.resizing_element.bind(this, contextResizing, direction, this.context[contextResizing._resize_plugin]);
-            this.addDocEvent('mousemove', resizing_element_bind);
-            this.addDocEvent('mouseup', closureFunc_bind);
-            this.addDocEvent('keydown', closureFunc_bind);
+            this.eventManager.addGlobalEvent('mousemove', resizing_element_bind);
+            this.eventManager.addGlobalEvent('mouseup', closureFunc_bind);
+            this.eventManager.addGlobalEvent('keydown', closureFunc_bind);
         },
     
         /**
@@ -865,7 +865,7 @@
             this.plugins[pluginName].setSize.call(this, w, h, false, direction);
             if (isVertical) this.plugins.resizing.setTransformSize.call(this, this.context[this.context.resizing._resize_plugin]._element, w, h);
 
-            this.selectComponent(this.context[pluginName]._element, pluginName);
+            this.component.select(this.context[pluginName]._element, pluginName);
         }
     };
 

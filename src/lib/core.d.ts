@@ -3,12 +3,12 @@ import { Plugin } from './../plugins/Plugin.d';
 import { Lang } from './../lang/Lang.d';
 import { SunEditorOptions } from './../options.d';
 import { Context } from './context';
-import Util from './util';
+import Util from '../helpers/util';
 import { Module } from '../plugins/Module';
-import _Notice from '../plugins/modules/_notice';
+import _Notice from './classes/notice.d';
 
-type Controllers = Array<string | Function | Element>;
-type fileInfo =  {
+export type Controllers = Array<string | Function | Element>;
+export type fileInfo =  {
     index: number;
     name: string;
     size: string | number;
@@ -17,10 +17,13 @@ type fileInfo =  {
     element: Element;
     src: string;
 };
-type seledtedFileInfo = {target: Element; component: Element; pluginName: string;};
-type commands = 'selectAll' | 'codeView' | 'fullScreen' | 'indent' | 'outdent' | 'undo' | 'redo' | 'removeFormat' | 'print' | 'preview' | 'showBlocks' | 'save' | 'bold' | 'underline' | 'italic' | 'strike' | 'subscript' | 'superscript' | 'copy' | 'cut' | 'paste';
-​​
-interface Core {
+export type seledtedFileInfo = {target: Element; component: Element; pluginName: string;};
+export type commands = 'selectAll' | 'codeView' | 'fullScreen' | 'indent' | 'outdent' | 'undo' | 'redo' | 'removeFormat' | 'print' | 'preview' | 'showBlocks' | 'save' | 'bold' | 'underline' | 'italic' | 'strike' | 'subscript' | 'superscript' | 'copy' | 'cut' | 'paste';
+export type status = {
+    
+}
+
+export interface Core {
     /**
      * @description Util object
      */
@@ -82,7 +85,7 @@ interface Core {
     lang: Lang;
 
     /**
-     * @description The selection node (core.getSelectionNode()) to which the effect was last applied
+     * @description The selection node (selection.getNode()) to which the effect was last applied
      */
     effectNode: Node;
 
@@ -122,7 +125,7 @@ interface Core {
     currentControllerTarget: Element;
 
     /**
-     * @description The file component object of current selected file tag (getFileComponent(): {target, component, pluginName})
+     * @description The file component object of current selected file tag (component.get(): {target, component, pluginName})
      */
     currentFileComponentInfo: seledtedFileInfo;
 
@@ -233,7 +236,7 @@ interface Core {
 
     /**
      * @description Show controller at editor area (controller elements, function, "controller target element(@Required)", "controller name(@Required)", etc..)
-     * @param arguments controller elements, functions..
+     * @param arguments controller elements, function.
      */
     controllersOn(...arguments: Controllers): void;
 
@@ -288,62 +291,6 @@ interface Core {
     blur(): void;
 
     /**
-     * @description Set current editor's range object and return.
-     * @param startCon The startContainer property of the selection object.
-     * @param startOff The startOffset property of the selection object.
-     * @param endCon The endContainer property of the selection object.
-     * @param endOff The endOffset property of the selection object.
-     * @returns
-     */
-    setRange(startCon: Node, startOff: number, endCon: Node, endOff: number): Range;
-
-    /**
-     * @description Remove range object and button effect
-     */
-    removeRange(): void;
-
-    /**
-     * @description Get current editor's range object
-     * @returns
-     */
-    getRange(): Range;
-
-    /**
-     * @description If the "range" object is a non-editable area, add a line at the top of the editor and update the "range" object.
-     * Returns a new "range" or argument "range".
-     * @param range core.getRange()
-     * @param container If there is "container" argument, it creates a line in front of the container.
-     */
-    getRange_addLine(range: Range, container?: Element): Range;
-
-    /**
-     * @description Get window selection obejct
-     * @returns
-     */
-    getSelection(): Selection;
-
-    /**
-     * @description Get current select node
-     * @returns
-     */
-    getSelectionNode(): Node;
-
-    /**
-     * @description Returns a "formatElement"(util.isFormatElement) array from the currently selected range.
-     * @param validation The validation function. (Replaces the default validation function-util.isFormatElement(current))
-     * @returns
-     */
-    getSelectedElements(validation?: Function): Node[];
-
-    /**
-     * @description Get format elements and components from the selected area. (P, DIV, H[1-6], OL, UL, TABLE..)
-     * If some of the component are included in the selection, get the entire that component.
-     * @param removeDuplicate If true, if there is a parent and child tag among the selected elements, the child tag is excluded.
-     * @returns
-     */
-    getSelectedElementsAndComponents(removeDuplicate: boolean): Node[];
-
-    /**
      * @description Determine if this offset is the edge offset of container
      * @param container The container property of the selection object.
      * @param offset The offset property of the selection object.
@@ -363,42 +310,6 @@ interface Core {
     closeLoading(): void;
 
     /**
-     * @description Append format element to sibling node of argument element.
-     * If the "formatNodeName" argument value is present, the tag of that argument value is inserted,
-     * If not, the currently selected format tag is inserted.
-     * @param element Insert as siblings of that element
-     * @param formatNode Node name or node obejct to be inserted
-     * @returns
-     */
-    appendFormatTag(element: Element, formatNode?: string | Element): Element;
-
-    /**
-     * @description The method to insert a element and return. (used elements : table, hr, image, video)
-     * If "element" is "HR", insert and return the new line.
-     * @param element Element to be inserted
-     * @param notHistoryPush When true, it does not update the history stack and the selection object and return EdgeNodes (util.getEdgeChildNodes)
-     * @param checkCharCount If true, if "options.maxCharCount" is exceeded when "element" is added, null is returned without addition.
-     * @param notSelect If true, Do not automatically select the inserted component.
-     * @returns
-     */
-    insertComponent(element: Element, notHistoryPush?: boolean, checkCharCount?: boolean, notSelect?:boolean): Element;
-    
-    /**
-     * @description Gets the file component and that plugin name
-     * return: {target, component, pluginName} | null
-     * @param element Target element (figure tag, component div, file tag)
-     * @returns
-     */
-    getFileComponent(element: Element): seledtedFileInfo | null;
-
-    /**
-     * @description The component(image, video) is selected and the resizing module is called.
-     * @param element Element tag (img, iframe, video)
-     * @param pluginName Plugin name (image, video)
-     */
-    selectComponent(element: Element, pluginName: string): void;
-
-    /**
      * @description Delete selected node and insert argument value node and return.
      * If the "afterNode" exists, it is inserted after the "afterNode"
      * Inserting a text node merges with both text nodes on both sides and returns a new "{ container, startOffset, endOffset }".
@@ -416,56 +327,6 @@ interface Core {
     removeNode(): { container: Node; offset: number; prevContainer?: Node };
 
     /**
-     * @description Appended all selected format Element to the argument element and insert
-     * @param rangeElement Element of wrap the arguments (BLOCKQUOTE...)
-     */
-    applyRangeFormatElement(rangeElement: Element): void;
-
-    /**
-     * @description The elements of the "selectedFormats" array are detached from the "rangeElement" element. ("LI" tags are converted to "P" tags)
-     * When "selectedFormats" is null, all elements are detached and return {cc: parentNode, sc: nextSibling, ec: previousSibling, removeArray: [Array of removed elements]}.
-     * @param rangeElement Range format element (PRE, BLOCKQUOTE, OL, UL...)
-     * @param selectedFormats Array of format elements (P, DIV, LI...) to remove.
-     * If null, Applies to all elements and return {cc: parentNode, sc: nextSibling, ec: previousSibling}
-     * @param newRangeElement The node(rangeElement) to replace the currently wrapped node.
-     * @param remove If true, deleted without detached.
-     * @param notHistoryPush When true, it does not update the history stack and the selection object and return EdgeNodes (util.getEdgeChildNodes)
-     * @returns
-     */
-    detachRangeFormatElement(rangeElement: Element, selectedFormats: Element[] | null, newRangeElement: Element | null, remove: boolean, notHistoryPush: boolean): {cc: Node, sc: Node, ec: Node, removeArray: Element[]}
-
-    /**
-     * @description "selectedFormats" array are detached from the list element.
-     * The return value is applied when the first and last lines of "selectedFormats" are "LI" respectively.
-     * @param selectedFormats Array of format elements (LI, P...) to remove.
-     * @param remove If true, deleted without detached.
-     * @returns {sc: <LI>, ec: <LI>}.
-     */
-    detachList(selectedFormats: Element[], remove: boolean): {sc: Element, ec: Element};
-
-    /**
-     * @description Add, update, and delete nodes from selected text.
-     * 1. If there is a node in the "appendNode" argument, a node with the same tags and attributes as "appendNode" is added to the selection text.
-     * 2. If it is in the same tag, only the tag's attributes are changed without adding a tag.
-     * 3. If the "appendNode" argument is null, the node of the selection is update or remove without adding a new node.
-     * 4. The same style as the style attribute of the "styleArray" argument is deleted.
-     *    (Styles should be put with attribute names from css. ["background-color"])
-     * 5. The same class name as the class attribute of the "styleArray" argument is deleted.
-     *    (The class name is preceded by "." [".className"])
-     * 6. Use a list of styles and classes of "appendNode" in "styleArray" to avoid duplicate property values.
-     * 7. If a node with all styles and classes removed has the same tag name as "appendNode" or "removeNodeArray", or "appendNode" is null, that node is deleted.
-     * 8. Regardless of the style and class of the node, the tag with the same name as the "removeNodeArray" argument value is deleted.
-     * 9. If the "strictRemove" argument is true, only nodes with all styles and classes removed from the nodes of "removeNodeArray" are removed.
-     * 10. It won't work if the parent node has the same class and same value style.
-     *    However, if there is a value in "removeNodeArray", it works and the text node is separated even if there is no node to replace.
-     * @param appendNode The element to be added to the selection. If it is null, only delete the node.
-     * @param styleArray The style or className attribute name Array to check (['font-size'], ['.className'], ['font-family', 'color', '.className']...])
-     * @param removeNodeArray An array of node names to remove types from, remove all formats when "appendNode" is null and there is an empty array or null value. (['span'], ['strong', 'em'] ...])
-     * @param strictRemove If true, only nodes with all styles and classes removed from the nodes of "removeNodeArray" are removed.
-     */
-    nodeChange(appendNode?: Element, styleArray?: string[], removeNodeArray?: string[], strictRemove?: boolean): void;
-
-    /**
      * @description Run plugin calls and basic commands.
      * @param command Command string
      * @param display Display type string ('command', 'submenu', 'dialog', 'container')
@@ -480,18 +341,6 @@ interface Core {
      * @param command Property of command button (data-value)
      */
     commandHandler(target: Element | null, command: commands): void;
-
-    /**
-     * @description Remove format of the currently selected range
-     */
-    removeFormat(): void;
-
-    /**
-     * @description This method implements indentation to selected range.
-     * Setted "margin-left" to "25px" in the top "P" tag of the parameter node.
-     * @param command Separator ("indent" or "outdent")
-     */
-    indent(command: 'indent' | 'outdent'): void;
 
     /**
      * @description Add or remove the class name of "body" so that the code block is visible
@@ -560,41 +409,9 @@ interface Core {
      * @returns 
      */
     convertHTMLForCodeView(html: Element | string): string;
-
-    /**
-     * @description Add an event to document.
-     * When created as an Iframe, the same event is added to the document in the Iframe.
-     * @param type Event type
-     * @param listener Event listener
-     * @param useCapture Use event capture
-     */
-    addDocEvent(type: string, listener: EventListener, useCapture: boolean): void;
-
-    /**
-     * @description Remove events from document.
-     * When created as an Iframe, the event of the document inside the Iframe is also removed.
-     * @param type Event type
-     * @param listener Event listener
-     */
-    removeDocEvent(type: string, listener: EventListener): void;
-
-    /**
-     * @description When "element" is added, if it is greater than "options.maxCharCount", false is returned.
-     * @param element Element node or String.
-     * @param charCounterType charCounterType. If it is null, the options.charCounterType
-     */
-    checkCharCount(element: Node | string, charCounterType?: string): boolean;
-
-    /**
-     * @description Get the length of the content.
-     * Depending on the option, the length of the character is taken. (charCounterType)
-     * @param content Content to count
-     * @param charCounterType options.charCounterType
-     */
-    getCharLength(content: string, charCounterType: string): number;
 }
 
-interface Toolbar {
+export interface Toolbar {
     /**
      * @description Disable the toolbar
      */
@@ -633,256 +450,6 @@ export default class SunEditor {
     core: Core;
     util: Util;
     
-    onload: (core: Core, reload: boolean) => void;
-    onScroll: EventFn;
-    onFocus: EventFn;
-    onMouseDown: EventFn;
-    onClick: EventFn;
-    onInput: EventFn;
-    onKeyDown: EventFn;
-    onKeyUp: EventFn;
-    onChange: (contents: string, core: Core) => void;
-    onBlur: (e: FocusEvent, core: Core) => void;
-    onDrop: (e: Event, cleanData: string, maxCharCount: number, core: Core) => boolean | string;
-    onPaste: (e: Event, cleanData: string, maxCharCount: number, core: Core) => boolean | string;
-    onCopy: (e: Event, clipboardData: any, core: Core) => void;
-    onCut: (e: Event, clipboardData: any, core: Core) => void;
-
-    /**
-     * @description Called just before the inline toolbar is positioned and displayed on the screen.
-     * @param toolbar Toolbar Element
-     * @param context The editor's context object (editor.getContext())
-     * @param core Core object
-     */
-    showInline: (toolbar: Element, context: Context, core: Core) => void;
-
-    /**
-     * @description Called just after the controller is positioned and displayed on the screen.
-     * controller - editing elements displayed on the screen [image resizing, table editor, link editor..]]
-     * @param name The name of the plugin that called the controller
-     * @param controllers Array of Controller elements
-     * @param core Core object
-     */
-    showController: (name: String, controllers: Controllers, core: Core) => void;
-
-    /**
-     * @description It replaces the default callback function of the image upload
-     * @param xmlHttp xmlHttpRequest object
-     * @param info Input information
-     * - linkValue: Link url value
-     * - linkNewWindow: Open in new window Check Value
-     * - inputWidth: Value of width input
-     * - inputHeight: Value of height input
-     * - align: Align Check Value
-     * - isUpdate: Update image if true, create image if false
-     * - element: If isUpdate is true, the currently selected image.
-     * @param core Core object
-     */
-    imageUploadHandler: (xmlHttp: XMLHttpRequest, info: imageInputInformation, core: Core) => void;
-
-    /**
-     * @description It replaces the default callback function of the video upload
-     * @param xmlHttp xmlHttpRequest object
-     * @param info Input information
-     * - inputWidth: Value of width input
-     * - inputHeight: Value of height input
-     * - align: Align Check Value
-     * - isUpdate: Update video if true, create video if false
-     * - element: If isUpdate is true, the currently selected video.
-     * @param core Core object
-     */
-    videoUploadHandler: (xmlHttp: XMLHttpRequest, info: videoInputInformation, core: Core) => void;
-
-    /**
-     * @description It replaces the default callback function of the audio upload
-     * @param xmlHttp xmlHttpRequest object
-     * @param info Input information
-     * - isUpdate: Update audio if true, create audio if false
-     * - element: If isUpdate is true, the currently selected audio.
-     * @param core Core object
-     */
-    audioUploadHandler: (xmlHttp: XMLHttpRequest, info: audioInputInformation, core: Core) => void;
-
-    /**
-     * @description An event when toggling between code view and wysiwyg view.
-     * @param isCodeView Whether the current code view mode
-     * @param core Core object
-     */
-    toggleCodeView: (isCodeView: boolean, core: Core) => void;
-
-    /**
-     * @description An event when toggling full screen.
-     * @param isFullScreen Whether the current full screen mode
-     * @param core Core object
-     */
-    toggleFullScreen: (isFullScreen: boolean, core: Core) => void;
-
-    /**
-     * @description Called before the image is uploaded
-     * If true is returned, the internal upload process runs normally.
-     * If false is returned, no image upload is performed.
-     * If new fileList are returned,  replaced the previous fileList
-     * If undefined is returned, it waits until "uploadHandler" is executed.
-     * @param files Files array
-     * @param info Input information
-     * @param core Core object
-     * @param uploadHandler If undefined is returned, it waits until "uploadHandler" is executed.
-     *                "uploadHandler" is an upload function with "core" and "info" bound.
-     *                [upload files] : uploadHandler(files or [new File(...),])
-     *                [error]        : uploadHandler("Error message")
-     *                [Just finish]  : uploadHandler()
-     *                [directly register] : uploadHandler(response) // Same format as "imageUploadUrl" response
-     *                                   ex) {
-     *                                      // "errorMessage": "insert error message",
-     *                                      "result": [ { "url": "...", "name": "...", "size": "999" }, ]
-     *                                   }
-     * @returns
-     */
-    onImageUploadBefore: (files: any[], info: imageInputInformation, core: Core, uploadHandler: Function) => boolean | any[] | undefined;
-
-    /**
-     * @description Called before the video is uploaded
-     * If true is returned, the internal upload process runs normally.
-     * If false is returned, no video upload is performed.
-     * If new fileList are returned,  replaced the previous fileList
-     * If undefined is returned, it waits until "uploadHandler" is executed.
-     * @param files Files array
-     * @param info Input information
-     * @param core Core object
-     * @param uploadHandler If undefined is returned, it waits until "uploadHandler" is executed.
-     *                "uploadHandler" is an upload function with "core" and "info" bound.
-     *                [upload files] : uploadHandler(files or [new File(...),])
-     *                [error]        : uploadHandler("Error message")
-     *                [Just finish]  : uploadHandler()
-     *                [directly register] : uploadHandler(response) // Same format as "videoUploadUrl" response
-     *                                   ex) {
-     *                                      // "errorMessage": "insert error message",
-     *                                      "result": [ { "url": "...", "name": "...", "size": "999" }, ]
-     *                                   }
-     * @returns
-     */
-    onVideoUploadBefore: (files: any[], info: videoInputInformation, core: Core, uploadHandler: Function) => boolean | any[] | undefined;
-
-    /**
-     * @description Called before the audio is uploaded
-     * If true is returned, the internal upload process runs normally.
-     * If false is returned, no audio upload is performed.
-     * If new fileList are returned,  replaced the previous fileList
-     * If undefined is returned, it waits until "uploadHandler" is executed.
-     * @param files Files array
-     * @param info Input information
-     * @param core Core object
-     * @param uploadHandler If undefined is returned, it waits until "uploadHandler" is executed.
-     *                "uploadHandler" is an upload function with "core" and "info" bound.
-     *                [upload files] : uploadHandler(files or [new File(...),])
-     *                [error]        : uploadHandler("Error message")
-     *                [Just finish]  : uploadHandler()
-     *                [directly register] : uploadHandler(response) // Same format as "audioUploadUrl" response
-     *                                   ex) {
-     *                                      // "errorMessage": "insert error message",
-     *                                      "result": [ { "url": "...", "name": "...", "size": "999" }, ]
-     *                                   }
-     * @returns
-     */
-    onAudioUploadBefore: (files: any[], info: audioInputInformation, core: Core, uploadHandler: Function) => boolean | any[] | undefined;
-
-    /**
-     * @description Called when the image is uploaded, updated, deleted
-     * @param targetElement Target element
-     * @param index Uploaded index
-     * @param state Upload status ('create', 'update', 'delete')
-     * @param info Info object
-     * - index: data index
-     * - name: file name
-     * - size: file size
-     * - select: select function
-     * - delete: delete function
-     * - element: target element
-     * - src: src attribute of tag
-     * @param remainingFilesCount Count of remaining files to upload (0 when added as a url)
-     * @param core Core object
-     */
-    onImageUpload: (targetElement: HTMLImageElement, index: number, state: 'create' | 'update' | 'delete', info: fileInfo, remainingFilesCount: number, core: Core) => void;
-
-    /**
-     * @description Called when the video(iframe, video) is uploaded, updated, deleted
-     * @param targetElement Target element
-     * @param index Uploaded index
-     * @param state Upload status ('create', 'update', 'delete')
-     * @param info Info object
-     * - index: data index
-     * - name: file name
-     * - size: file size
-     * - select: select function
-     * - delete: delete function
-     * - element: target element
-     * - src: src attribute of tag
-     * @param remainingFilesCount Count of remaining files to upload (0 when added as a url)
-     * @param core Core object
-     */
-    onVideoUpload: (targetElement: HTMLIFrameElement | HTMLVideoElement, index: number, state: 'create' | 'update' | 'delete', info: fileInfo, remainingFilesCount: number, core: Core) => void;
-
-    /**
-     * @description Called when the audio is uploaded, updated, deleted
-     * @param targetElement Target element
-     * @param index Uploaded index
-     * @param state Upload status ('create', 'update', 'delete')
-     * @param info Info object
-     * - index: data index
-     * - name: file name
-     * - size: file size
-     * - select: select function
-     * - delete: delete function
-     * - element: target element
-     * - src: src attribute of tag
-     * @param remainingFilesCount Count of remaining files to upload (0 when added as a url)
-     * @param core Core object
-     */
-    onAudioUpload: (targetElement: HTMLAudioElement, index: number, state: 'create' | 'update' | 'delete', info: fileInfo, remainingFilesCount: number, core: Core) => void;
-
-    /**
-     * @description Called when the image is upload failed
-     * @param errorMessage Error message
-     * @param result Response Object
-     * @param core Core object
-     * @returns
-     */
-    onImageUploadError: (errorMessage: string, result: any, core: Core) => boolean;
-
-    /**
-     * @description Called when the video(iframe, video) upload failed
-     * @param errorMessage Error message
-     * @param result Response Object
-     * @param core Core object
-     * @returns
-     */
-    onVideoUploadError: (errorMessage: string, result: any, core: Core) => boolean;
-
-    /**
-     * @description Called when the audio upload failed
-     * @param errorMessage Error message
-     * @param result Response Object
-     * @param core Core object
-     * @returns
-     */
-    onAudioUploadError: (errorMessage: string, result: any, core: Core) => boolean;
-
-    /**
-     * @description Called when the audio upload failed
-     * @param height Height after resized (px)
-     * @param prevHeight Prev height before resized (px)
-     * @param core Core object
-     * @returns
-     */
-    onResizeEditor: (height: number, prevHeight: number, core: Core) => {};
-
-    /**
-     * @description Reset the buttons on the toolbar. (Editor is not reloaded)
-     * You cannot set a new plugin for the button.
-     * @param buttonList Button list 
-     */
-    setToolbarButtons(buttonList: any[]): void;
-
     /**
      * @description Add or reset option property
      * @param options Options
@@ -898,26 +465,9 @@ export default class SunEditor {
     setDefaultStyle(style: string): void;
 
     /**
-     * @description Open a notice area
-     * @param message Notice message
-     */
-    noticeOpen(message: string): void;
-
-    /**
-     * @description Close a notice area
-     */
-    noticeClose(): void;
-
-    /**
      * @description Copying the contents of the editor to the original textarea
      */
     save(): void;
-
-    /**
-     * @description Gets the suneditor's context object. Contains settings, plugins, and cached element objects
-     * @returns
-     */
-    getContext(): Context;
 
     /**
      * @description Gets the contents of the suneditor
@@ -942,22 +492,8 @@ export default class SunEditor {
     getCharCount(charCounterType?: string): number;
 
     /**
-     * @description Gets uploaded images informations
-     * - index: data index
-     * - name: file name
-     * - size: file size
-     * - select: select function
-     * - delete: delete function
-     * - element: img element
-     * - src: src attribute of img tag
-     * @returns
-     */
-    getImagesInfo(): fileInfo[];
-
-    /**
      * @description Gets uploaded files(plugin using fileManager) information list.
      * image: [img], video: [video, iframe], audio: [audio]
-     * When the argument value is 'image', it is the same function as "getImagesInfo".
      * - index: data index
      * - name: file name
      * - size: file size
@@ -969,12 +505,6 @@ export default class SunEditor {
      * @returns
      */
     getFilesInfo(pluginName: string): fileInfo[];
-
-     /**
-     * @description Upload images using image plugin
-     * @param files FileList
-     */
-    insertImage(files: FileList): void;
 
     /**
      * @description Inserts an HTML element or HTML string or plain string at the current cursor position

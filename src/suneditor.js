@@ -34,13 +34,11 @@ export default {
      * @returns {Object}
      */
     create: function (idOrElement, options, _init_options) {
-        util._propertiesInit();
-
         if (typeof options !== 'object') options = {};
         if (_init_options) {
             options =  [_init_options, options].reduce(function (init, option) {
                             for (let key in option) {
-                                if (!util.hasOwn(option, key)) continue;
+                                if (!option.hasOwnProperty(key)) continue;
                                 if (key === 'plugins' && option[key] && init[key]) {
                                     let i = init[key], o = option[key];
                                     i = i.length ? i : Object.keys(i).map(function(name) { return i[name]; });
@@ -70,6 +68,6 @@ export default {
             throw Error('[SUNEDITOR.create.fail] The ID of the suneditor you are trying to create already exists (ID:"' + cons.constructed._top.id + '")');
         }
 
-        return core(_Context(element, cons.constructed, cons.options), cons.pluginCallButtons, cons.plugins, cons.options.lang, options, cons._responsiveButtons);
+        return core(_Context(element, cons.constructed), cons.pluginCallButtons, cons.plugins, cons.options.lang, options, cons._responsiveButtons);
     }
 };

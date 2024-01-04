@@ -64,7 +64,7 @@ export default {
         contextPicker._styleProperty = 'backgroundColor';
         contextPicker._colorList = contextHiliteColor.colorList;
         
-        this.plugins.colorPicker.init.call(this, this.getSelectionNode(), null);
+        this.plugins.colorPicker.init.call(this, this.selection.getNode(), null);
     },
 
      /**
@@ -86,7 +86,7 @@ export default {
     },
 
     remove: function () {
-        this.nodeChange(null, ['background-color'], ['span'], true);
+        this.applyStyleNode(null, ['background-color'], ['span'], true);
         this.submenuOff();
     },
 
@@ -95,7 +95,7 @@ export default {
         
         const newNode = this.util.createElement('SPAN');
         newNode.style.backgroundColor = color;
-        this.nodeChange(newNode, ['background-color'], null, null);
+        this.applyStyleNode(newNode, ['background-color'], null, null);
         
         this.submenuOff();
     }

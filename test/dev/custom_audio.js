@@ -228,7 +228,7 @@ export default {
 
     /**
      * @Override core, fileManager, resizing
-     * @description It is called from core.selectComponent.
+     * @description It is called from core.component.select
      * @param {Element} element Target element
      */
     select: function (element) {
@@ -241,7 +241,7 @@ export default {
      */
     destroy: function (element) {
         element = element || this.context.customAudio._element;
-        const container = this.util.getParentElement(element, this.util.isComponent) || element;
+        const container = this.util.getParentElement(element, this.node.isComponent) || element;
         const dataIndex = element.getAttribute('data-index') * 1;
         const focusEl = (container.previousElementSibling || container.nextElementSibling);
 
@@ -366,7 +366,7 @@ export default {
         const response = JSON.parse(xmlHttp.responseText);
 
         if (response.errorMessage) {
-            this.functions.noticeOpen(response.errorMessage);
+            this.notice.open(response.errorMessage);
         } else {
             const fileList = response.result;
             let oAudio = null;
@@ -385,7 +385,7 @@ export default {
     },
 
     callBack_error: function (errorMessage, response, core) {
-        core.functions.noticeOpen(errorMessage | response.toString());
+        core.notice.open(errorMessage | response.toString());
     },
 
     setupUrl: function () {
@@ -420,7 +420,7 @@ export default {
             // you need to create component tags by calling the "set_cover" and "set_container" functions of the "component" module.
             const cover = this.plugins.component.set_cover.call(this, element);
             const container = this.plugins.component.set_container.call(this, cover, '');
-            this.insertComponent(container, false);
+            this.component.insert(container, false);
         } // update
         else if (context._element.src !== src) {
             element = context._element;
@@ -442,7 +442,7 @@ export default {
         element.setAttribute('controls', true);
         
         // find component element
-        const existElement = this.util.getParentElement(element, this.util.isMediaComponent) || 
+        const existElement = this.util.getParentElement(element, this.node.isComponent) || 
             this.util.getParentElement(element, function (current) {
                 return this.isWysiwygDiv(current.parentNode);
             }.bind(this.util));
@@ -489,7 +489,7 @@ export default {
         selectionTag.style.border = '1px solid #80bdff';
         context._element = selectionTag;
         context._cover = this.util.getParentElement(selectionTag, 'FIGURE');
-        context._container = this.util.getParentElement(selectionTag, this.util.isComponent);
+        context._container = this.util.getParentElement(selectionTag, this.node.isComponent);
     },
 
     /**

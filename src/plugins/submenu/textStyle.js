@@ -103,7 +103,7 @@ export default {
         const util = this.util;
         const textStyleContext = this.context.textStyle;
         const styleButtonList = textStyleContext._styleList;
-        const selectionNode = this.getSelectionNode();
+        const selectionNode = this.selection.getNode();
 
         for (let i = 0, len = styleButtonList.length, btn, data, active; i < len; i++) {
             btn = styleButtonList[i];
@@ -113,7 +113,7 @@ export default {
                 node = selectionNode;
                 active = false;
                 
-                while (node && !util.isFormatElement(node) && !util.isComponent(node)) {
+                while (node && !util.isFormatElement(node) && !this.node.isComponent(node)) {
                     if (node.nodeName.toLowerCase() === btn.getAttribute('data-command').toLowerCase()) {
                         value = data[v];
                         if (/^\./.test(value) ? util.hasClass(node, value.replace(/^\./, '')) : !!node.style[value]) {
@@ -160,7 +160,7 @@ export default {
 
         const newNode = this.util.hasClass(target, 'active') ? null : tag.cloneNode(false);
         const removeNodes = newNode ? null : [tag.nodeName];
-        this.nodeChange(newNode, checkStyles, removeNodes, true);
+        this.applyStyleNode(newNode, checkStyles, removeNodes, true);
 
         this.submenuOff();
     }

@@ -41,7 +41,7 @@
          * @param {FormData} formData FormData in body
          * @param {Function|null} callBack Success call back function
          * @param {Function|null} errorCallBack Error call back function
-         * @example this.plugins.fileManager.upload.call(this, imageUploadUrl, this.options.imageUploadHeader, formData, this.plugins.image.callBack_imgUpload.bind(this, info), this.functions.onImageUploadError);
+         * @example this.plugins.fileManager.upload.call(this, imageUploadUrl, this.options.imageUploadHeader, formData, this.plugins.image.callBack_imgUpload.bind(this, info), this.events.onImageUploadError);
          */
         upload: function (uploadUrl, uploadHeader, formData, callBack, errorCallBack) {
             this.showLoading();
@@ -71,9 +71,9 @@
                 } else { // exception
                     this.closeLoading();
                     const res = !xmlHttp.responseText ? xmlHttp : JSON.parse(xmlHttp.responseText);
-                    if (typeof errorCallBack !== 'function' || errorCallBack('', res, this)) {
+                    if (typeof errorCallBack !== 'function' || errorCallBack.call(this.editor, '', res)) {
                         const err = '[SUNEDITOR.fileManager.upload.serverException] status: ' + xmlHttp.status + ', response: ' + (res.errorMessage || xmlHttp.responseText);
-                        this.functions.noticeOpen(err);
+                        this.notice.open(err);
                         throw Error(err);
                     }
                 }
@@ -93,7 +93,7 @@
          *      imagePlugin.openModify.call(this, true);
          *      imagePlugin.update_image.call(this, true, false, true);
          *  }.bind(this);
-         *  this.plugins.fileManager.checkInfo.call(this, 'image', ['img'], this.functions.onImageUpload, modifyHandler, true);
+         *  this.plugins.fileManager.checkInfo.call(this, 'image', ['img'], this.events.onImageUpload, modifyHandler, true);
          */
         checkInfo: function (pluginName, tagNames, uploadEventHandler, modifyHandler, resizing) {
             let tags = [];
@@ -138,7 +138,7 @@
             
             for (let i = 0, len = tags.length, tag; i < len; i++) {
                 tag = tags[i];
-                if (!this.util.getParentElement(tag, this.util.isMediaComponent) || !fileManagerPlugin._checkMediaComponent(tag)) {
+                if (!this.util.getParentElement(tag, this.node.isComponent) || !fileManagerPlugin._checkMediaComponent(tag)) {
                     currentTags.push(context._infoIndex);
                     modifyHandler(tag);
                 } else if (!tag.getAttribute('data-index') || infoIndex.indexOf(tag.getAttribute('data-index') * 1) < 0) {
@@ -155,7 +155,7 @@
                 if (currentTags.indexOf(dataIndex) > -1) continue;
 
                 infoList.splice(i, 1);
-                if (typeof uploadEventHandler === 'function') uploadEventHandler(null, dataIndex, 'delete', null, 0, this);
+                if (typeof uploadEventHandler === 'function') uploadEventHandler.call(this.editor, null, dataIndex, 'delete', null, 0);
                 i--;
             }
 
@@ -171,7 +171,7 @@
          * @param {Boolean} resizing True if the plugin is using a resizing module
          * @example 
          * uploadCallBack {.. file = { name: fileList[i].name, size: fileList[i].size };
-         * this.plugins.fileManager.setInfo.call(this, 'image', oImg, this.functions.onImageUpload, file, true);
+         * this.plugins.fileManager.setInfo.call(this, 'image', oImg, this.events.onImageUpload, file, true);
          */
         setInfo: function (pluginName, element, uploadEventHandler, file, resizing) {
             const _resize_plugin = resizing ? this.context.resizing._resize_plugin : '';
@@ -244,7 +244,7 @@
                 }
     
                 if (!element.getAttribute('data-origin')) {
-                    const container = this.util.getParentElement(element, this.util.isMediaComponent);
+                    const container = this.util.getParentElement(element, this.node.isComponent);
                     const cover = this.util.getParentElement(element, 'FIGURE');
         
                     const w = this.plugins.resizing._module_getSizeX.call(this, context, element, cover, container);
@@ -262,7 +262,7 @@
                 this.context.resizing._resize_plugin = _resize_plugin;
             }
 
-            if (typeof uploadEventHandler === 'function') uploadEventHandler(element, dataIndex, state, info, --context._uploadFileLength < 0 ? 0 : context._uploadFileLength, this);
+            if (typeof uploadEventHandler === 'function') uploadEventHandler.call(this.editor, element, dataIndex, state, info, --context._uploadFileLength < 0 ? 0 : context._uploadFileLength);
         },
 
         /**
@@ -278,7 +278,7 @@
                 for (let i = 0, len = infoList.length; i < len; i++) {
                     if (index === infoList[i].index) {
                         infoList.splice(i, 1);
-                        if (typeof uploadEventHandler === 'function') uploadEventHandler(null, index, 'delete', null, 0, this);
+                        if (typeof uploadEventHandler === 'function') uploadEventHandler.call(this.editor, null, index, 'delete', null, 0);
                         return;
                     }
                 }
@@ -296,7 +296,7 @@
             if (typeof uploadEventHandler === 'function') {
                 const infoList = context._infoList;
                 for (let i = 0, len = infoList.length; i < len; i++) {
-                    uploadEventHandler(null, infoList[i].index, 'delete', null, 0, this);
+                    uploadEventHandler.call(this.editor, null, infoList[i].index, 'delete', null, 0);
                 }
             }
 
